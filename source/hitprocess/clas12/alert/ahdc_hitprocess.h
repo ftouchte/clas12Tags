@@ -266,6 +266,7 @@ class ahdcSignal {
 		void GenerateNoise(double mean, double stdev);
 		
 		double GetMCTime(); // tmp
+		double GetMCDoca(); // tmp
 		double GetMCEtot(); // tmp
 		
 		/**

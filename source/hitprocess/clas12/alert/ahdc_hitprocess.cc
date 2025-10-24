@@ -101,7 +101,8 @@ map<string, double> ahdc_HitProcess::integrateDgt(MHit* aHit, int hitn) {
 	}
 	// the t0 is our timeOffset
 	double t0 = ahdcc.get_T0(sector, layer, component);	
-	ahdcSignal *Signal = new ahdcSignal(aHit,hitn,0,1000,t0,48,107.14);
+	ahdcSignal *Signal = new ahdcSignal(aHit,hitn,0,1000,t0,48,107.14); 
+	//ahdcSignal *Signal = new ahdcSignal(aHit,hitn,0,1000,t0-5,48,107.14); // add an offset of 5 ns to the t0 due to the systematic uncertainty of the decoding // is this only concern the simulation?
 	Signal->SetElectronYield(25000);
 	Signal->Digitize();
 	//std::map<std::string,double> output = Signal->Extract();
@@ -132,8 +133,9 @@ map<string, double> ahdc_HitProcess::integrateDgt(MHit* aHit, int hitn) {
 		else {
 			dgtz[dname] = 0;
 		}
-		//if (t == 28) { dgtz[dname] = Signal->nsteps;}
-		//if (t == 29) { dgtz[dname] = (int) (Signal->GetMCTime()*100);}
+		if (t == 28) { dgtz[dname] = Signal->nsteps;}
+		if (t == 27) { dgtz[dname] = (int) (Signal->GetMCDoca()*1000);}
+		if (t == 29) { dgtz[dname] = (int) (Signal->GetMCTime()*100);}
 	}
 	delete Signal;
 
@@ -317,6 +319,15 @@ void ahdcSignal::Digitize(){
 		short adc = (value < ADC_LIMIT) ? value : ADC_LIMIT; // saturation effect 
 		Dgtz.push_back(adc);
 	}
+}
+
+double ahdcSignal::GetMCDoca(){
+	if (nsteps == 0){ return 0; }
+	double mcdoca = Doca.at(0);
+	for (int s=0;s<nsteps;s++){
+		if (Doca.at(s) < mcdoca) mcdoca = Doca.at(s);
+	}
+	return mcdoca;
 }
 
 double ahdcSignal::GetMCTime(){
