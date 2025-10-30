@@ -146,6 +146,9 @@ class ahdcSignal {
 		std::vector<double> Doca; ///< array of distance of closest approach corresponding each step [mm]
 		std::vector<double> DriftTime; ///< array of drift time corresponding each step [ns]
 		vector<double> stepTime; ///< Geant4 time of each step [ns]
+		double Etot = 0;
+		double time = 0;
+		double doca = 0;
 		
 		/**
 		 * @brief Fill the arrays Doca and DriftTime
@@ -186,8 +189,10 @@ class ahdcSignal {
 			Edep = aHit->GetEdep();
 			stepTime    = aHit->GetTime();
 			nsteps = Edep.size();
+			Etot = 0;
 			for (int s=0;s<nsteps;s++){ 
 				Edep.at(s) = Edep.at(s)*1000;
+				Etot += Edep.at(s);
 				//std::cout << "stepTime[" << s << "] = " << stepTime[s] << std::endl;
 			} // convert MeV to keV
 			G4Time = aHit->GetTime();
@@ -234,7 +239,7 @@ class ahdcSignal {
 		 */
 		double operator()(double timePoint){
 			using namespace Genfun;
-			double signalValue = 0;
+			/*double signalValue = 0;
 			for (int s=0; s<nsteps; s++){
 				double sigma = Landau_width;	
 				double mu = DriftTime.at(s) + 1.36*sigma;
@@ -244,7 +249,13 @@ class ahdcSignal {
 				L.width() = Parameter("Width",sigma,0,400); 
 				signalValue += Edep.at(s)*L(timePoint-timeOffset);
 			}
-			return signalValue;
+			return signalValue;*/
+			double sigma = Landau_width;	
+			double mu = time + 1.36*sigma;
+			Landau L;
+			L.peak() = Parameter("Peak",mu,tmin,tmax); 
+			L.width() = Parameter("Width",sigma,0,400);
+			return Etot*L(timePoint-timeOffset);
 		}
 		
 		/**

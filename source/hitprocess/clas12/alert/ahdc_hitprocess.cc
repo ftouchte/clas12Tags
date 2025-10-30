@@ -275,6 +275,7 @@ void ahdcSignal::ComputeDocaAndTime(MHit * aHit){
 	double L_ab, L_ah, L_bh, H_abh;
 	// Compute the distance between top and bottom of the wire
 	L_ab = sqrt(pow(X_sigwire_top-X_sigwire_bot,2) + pow(Y_sigwire_top-Y_sigwire_bot,2) + pow(Z_sigwire_top-Z_sigwire_bot,2));
+	doca = 1e10; // arbitrary high value 
 	for (int s=0;s<nsteps;s++) {
 		// Load current hit positions
 		LposX = Lpos[s].x();
@@ -287,14 +288,18 @@ void ahdcSignal::ComputeDocaAndTime(MHit * aHit){
 		H_abh = L_ah*sqrt(1 - pow((L_ah*L_ah + L_ab*L_ab - L_bh*L_bh)/(2*L_ah*L_ab),2)); // this is the d.o.c.a of a given hit (!= MHit)
 		Doca.push_back(H_abh);
 		// Add a resolution on doca
-		double docasig = 337.3-210.3*H_abh+34.7*pow(H_abh,2); // um // fit sigma vs distance // Fig 4.14 (right), L. Causse's thesis
-		docasig = docasig/1000; // mm
-		std::default_random_engine dseed(time(0)); //seed
-		std::normal_distribution<double> docadist(H_abh, docasig);
+		//double docasig = 337.3-210.3*H_abh+34.7*pow(H_abh,2); // um // fit sigma vs distance // Fig 4.14 (right), L. Causse's thesis
+		//docasig = docasig/1000; // mm
+		//std::default_random_engine dseed(time(0)); //seed
+		//std::normal_distribution<double> docadist(H_abh, docasig);
 		//std::cout << "H_abh : " << H_abh << ", docasig : " << docasig << " ";
 		// Compute time
 		double driftTime = 7*H_abh + 7*pow(H_abh,2) + 4*pow(H_abh,3); // fit t vs distance //  Fig 4.12 (right), L. Causse's thesis
 		DriftTime.push_back(driftTime);
+		if (H_abh < doca) {
+			doca = H_abh;
+			time = driftTime;
+		}	
 	}
 }
 
